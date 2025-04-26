@@ -55,7 +55,6 @@ def get_salesforce_access_token():
 
 @app.get("/events/", response_model=List[EventOut])
 async def get_events():
-    # Get fresh token every time to avoid token expiration issues
     try:
         auth_data = get_salesforce_access_token()
         access_token = auth_data["access_token"]
@@ -68,18 +67,17 @@ async def get_events():
         "Content-Type": "application/json"
     }
 
-    # Modified SOQL query - removed Disposition_Description__c field
     query = (
         "SELECT Id, Subject, OwnerId, WhatId, AccountId, "
         "Appointment_Status__c, StartDateTime, EndDateTime, Description, "
         "CreatedById, LastModifiedById, "
         "Owner.Name, What.Name, Account.Name, CreatedBy.Name, LastModifiedBy.Name "
-        "FROM Event LIMIT 5"
+        "FROM Event"
     )
 
     url = f"{instance_url}/services/data/v59.0/query?q={query}"
     response = requests.get(url, headers=headers)
-
+   
     if response.status_code != 200:
         raise HTTPException(
             status_code=response.status_code, 
@@ -87,32 +85,27 @@ async def get_events():
         )
 
     records = response.json().get("records", [])
+    print(len(records))
 
     events = []
     for rec in records:
-        # Access related objects correctly using relationship names
         events.append(EventOut(
             id=rec["Id"],
             subject=rec.get("Subject"),
             owner_id=rec.get("OwnerId"),
-            owner_name=rec.get("Owner", {}).get("Name") if "Owner" in rec else None,
+            owner_name=rec.get("Owner", {}).get("Name") if rec.get("Owner") else None,
             what_id=rec.get("WhatId"),
-            what_name=rec.get("What", {}).get("Name") if "What" in rec else None,
+            what_name=rec.get("What", {}).get("Name") if rec.get("What") else None,
             account_id=rec.get("AccountId"),
-            account_name=rec.get("Account", {}).get("Name") if "Account" in rec else None,
+            account_name=rec.get("Account", {}).get("Name") if rec.get("Account") else None,
             appointment_status_c=rec.get("Appointment_Status__c"),
             start_datetime=rec.get("StartDateTime"),
             end_datetime=rec.get("EndDateTime"),
             description=rec.get("Description"),
-            # Removed disposition_description_c field
-            created_by_name=rec.get("CreatedBy", {}).get("Name") if "CreatedBy" in rec else None,
+            created_by_name=rec.get("CreatedBy", {}).get("Name") if rec.get("CreatedBy") else None,
             created_by_id=rec.get("CreatedById"),
-            last_modified_by_name=rec.get("LastModifiedBy", {}).get("Name") if "LastModifiedBy" in rec else None,
+            last_modified_by_name=rec.get("LastModifiedBy", {}).get("Name") if rec.get("LastModifiedBy") else None,
             last_modified_by_id=rec.get("LastModifiedById"),
         ))
 
     return events
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
