@@ -5,7 +5,9 @@ from fastapi import FastAPI, HTTPException
 from typing import List, Optional
 import requests
 from pydantic import BaseModel
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 # Define the EventOut model with the corrected fields
 class EventOut(BaseModel):
     id: str
@@ -29,10 +31,10 @@ class EventOut(BaseModel):
 app = FastAPI()
 
 # Salesforce credentials
-SALESFORCE_CONSUMER_KEY = "3MVG9wt4IL4O5wvKmuWykzw13DGFOnjtd2q0MhKTvjQRdylQtrxmuTnEq4i2_.s6sQSQ5YJMl.1n_ScCpSDSP"
-SALESFORCE_CONSUMER_SECRET = "B7143F5B5BEA70B22F037608F6FDCD818AFEFDC88CD1588FB0608720471E9369"
-SALESFORCE_USERNAME = "impwatson@gadieltechnologies.com"
-SALESFORCE_PASSWORD = "Wave@#123456"
+SALESFORCE_CONSUMER_KEY = os.getenv("SALESFORCE_CONSUMER_KEY")
+SALESFORCE_CONSUMER_SECRET = os.getenv("SALESFORCE_CONSUMER_SECRET")
+SALESFORCE_USERNAME = os.getenv("SALESFORCE_USERNAME")
+SALESFORCE_PASSWORD = os.getenv("SALESFORCE_PASSWORD")
 
 def get_salesforce_access_token():
     auth_url = "https://login.salesforce.com/services/oauth2/token"
