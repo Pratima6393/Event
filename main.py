@@ -126,6 +126,7 @@ def generate_markdown_with_watsonx(events: List[EventOut]) -> str:
             "account_id, account_name, appointment_status_c. Use the data below in JSON format:\n"
             + json.dumps(event_data, separators=(",", ":"))
         )
+        
         if estimate_tokens(prompt) > max_tokens:
             logger.warning("Prompt exceeds token limit—falling back to local builder")
             return build_markdown_local(events)
